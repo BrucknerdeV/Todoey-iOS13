@@ -7,12 +7,13 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {// Much simpler than UIView + UITableView as used in Flash Chat project
     
     var itemArray = [Item]()
     
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     //var itemArray = ["Blue Whale", "Red Heart", "Green Berets"]
     
@@ -23,9 +24,9 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
         
         // Store Data in document directory
         
-        print(dataFilePath!)
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        loadItems()
+//        loadItems()
         
         //if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
         //itemArray = items
@@ -101,8 +102,12 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             // Event when Add Item button is pressed
             
-            let newItem = Item()
-            newItem.title = textField.text ?? "Lost"
+            // Get the object, not the class
+            
+            
+            let newItem = Item(context: self.context)
+            newItem.title = textField.text!
+            newItem.done = false
             self.itemArray.append(newItem)
             
             self.saveItems()
@@ -120,27 +125,28 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
     //MARK: - Model Manipulation Methods
     
     func saveItems() {
-        let encoder = PropertyListEncoder()
+        //let encoder = PropertyListEncoder()
         
         do {
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            //let data = try encoder.encode(itemArray)
+            //try data.write(to: dataFilePath!)
+            try context.save()
         } catch {
-            print("Error encoding itemArray, \(error)")
+            print("Error saving context, \(error)")
         }
         
         self.tableView.reloadData() // To display added data
     }
     
-    func loadItems() {
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("Error decoding itemArray, \(error)")
-            }
-            
-        }
-    }
+//    func loadItems() {
+//        if let data = try? Data(contentsOf: dataFilePath!) {
+//            let decoder = PropertyListDecoder()
+//            do {
+//                itemArray = try decoder.decode([Item].self, from: data)
+//            } catch {
+//                print("Error decoding itemArray, \(error)")
+//            }
+//
+//        }
+//    }
 }
