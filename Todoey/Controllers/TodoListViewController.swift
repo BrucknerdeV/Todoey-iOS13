@@ -26,7 +26,7 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
         
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-//        loadItems()
+        loadItems()
         
         //if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
         //itemArray = items
@@ -138,15 +138,14 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
         self.tableView.reloadData() // To display added data
     }
     
-//    func loadItems() {
-//        if let data = try? Data(contentsOf: dataFilePath!) {
-//            let decoder = PropertyListDecoder()
-//            do {
-//                itemArray = try decoder.decode([Item].self, from: data)
-//            } catch {
-//                print("Error decoding itemArray, \(error)")
-//            }
-//
-//        }
-//    }
+    func loadItems() {
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            itemArray = try context.fetch(request)
+        } catch {
+            print("Error fetching data from context, \(error)")
+        }
+        
+        
+    }
 }
