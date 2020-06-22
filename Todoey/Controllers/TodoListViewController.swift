@@ -175,4 +175,14 @@ extension TodoListViewController: UISearchBarDelegate {
         //        }
         //tableView.reloadData()
     }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        // Revert to full display of data if no search data or X is pressed
+        if searchBar.text?.count == 0 {
+            loadItems()// Step 1
+            DispatchQueue.main.async { // Step 2 - Hide K/Board using main thread
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
 }
