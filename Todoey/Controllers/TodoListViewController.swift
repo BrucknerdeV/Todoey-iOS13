@@ -138,14 +138,41 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
         self.tableView.reloadData() // To display added data
     }
     
-    func loadItems() {
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+        // with = external parameter (from searchBarSearchButtonClicked func), request = parameter internal to this function
+        // = Item.fetchRequest() = default value, when no request is specified and all data to be diplayed.
+        //let request : NSFetchRequest<Item> = Item.fetchRequest()
         do {
             itemArray = try context.fetch(request)
         } catch {
             print("Error fetching data from context, \(error)")
         }
+        tableView.reloadData()
+    }
+    
+}
+
+//MARK: - Search Extension Method
+
+
+extension TodoListViewController: UISearchBarDelegate {
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        print(searchBar.text!)
+        // Find the record that partly or wholly contains the text in the searchBar.  MATCHES instead for exact match. [cd] = ignore case and diacratics
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        //request.predicate = predicate
+        //Sort
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        //request.sortDescriptors = [sortDescriptor]
+        loadItems(with: request)
         
-        
+        //        do {
+        //            itemArray = try context.fetch(request)
+        //        } catch {
+        //            print("Error fetching data from context, \(error)")
+        //        }
+        //tableView.reloadData()
     }
 }
