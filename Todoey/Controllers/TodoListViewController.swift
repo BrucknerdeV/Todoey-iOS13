@@ -36,20 +36,20 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
     
     // MARK: -  TableView Datasource Methods
     
-    //Determine how many rows:
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemArray.count
-    }
-    
-    // Display the data
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        //print("Cell for row @ indexPath called")
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        //Determine how many rows:
+        override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+            return itemArray.count
+        }
         
-        let item = itemArray[indexPath.row] // To shorten repetitive use of index.Path.row
-        
-        cell.textLabel?.text = item.title
-        
+        // Display the data
+        override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            //print("Cell for row @ indexPath called")
+            let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+            
+            let item = itemArray[indexPath.row] // To shorten repetitive use of index.Path.row
+            
+            cell.textLabel?.text = item.title
+            
         // Fix checkmark not cancelling when another row is selected
         //if item.done == true {
         //  cell.accessoryType = .checkmark
