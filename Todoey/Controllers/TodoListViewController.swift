@@ -12,6 +12,11 @@ import CoreData
 class TodoListViewController: UITableViewController {// Much simpler than UIView + UITableView as used in Flash Chat project
     
     var itemArray = [Item]()
+    var selectedCategory : Catagory? {// Xcode had issues with 'Category' as a table name.
+        didSet {
+            loadItems()
+        }
+    }
     
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
@@ -26,7 +31,7 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
         
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        loadItems()
+        //loadItems() - now in selectedCategory
         
         //if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
         //itemArray = items
@@ -36,27 +41,26 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
     
     // MARK: -  TableView Datasource Methods
     
-        //Determine how many rows:
-        override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-            return itemArray.count
-        }
+    //Determine how many rows:
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return itemArray.count
+    }
+    
+    // Display the data
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        //print("Cell for row @ indexPath called")
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
-        // Display the data
-        override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-            //print("Cell for row @ indexPath called")
-            let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-            
-            let item = itemArray[indexPath.row] // To shorten repetitive use of index.Path.row
-            
-            cell.textLabel?.text = item.title
-            
+        let item = itemArray[indexPath.row] // To shorten repetitive use of index.Path.row
+        
+        cell.textLabel?.text = item.title
+        
         // Fix checkmark not cancelling when another row is selected
         //if item.done == true {
         //  cell.accessoryType = .checkmark
         //} else {
         //  cell.accessoryType = .none
         //}
-        
         //Instead use the ternery operator - Handy
         //value = condition ? valueIfTrue : valueIfFalse
         cell.accessoryType = item.done ? .checkmark : .none
@@ -108,6 +112,7 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
             let newItem = Item(context: self.context)
             newItem.title = textField.text!
             newItem.done = false
+            newItem.parentCategory = self.selectedCategory //Foreign Key
             self.itemArray.append(newItem)
             
             self.saveItems()
@@ -138,10 +143,20 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
         self.tableView.reloadData() // To display added data
     }
     
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
         // with = external parameter (from searchBarSearchButtonClicked func), request = parameter internal to this function
         // = Item.fetchRequest() = default value, when no request is specified and all data to be diplayed.
         //let request : NSFetchRequest<Item> = Item.fetchRequest()
+        
+        // select only Items of specified Category
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
+        
         do {
             itemArray = try context.fetch(request)
         } catch {
@@ -161,12 +176,12 @@ extension TodoListViewController: UISearchBarDelegate {
         let request : NSFetchRequest<Item> = Item.fetchRequest()
         print(searchBar.text!)
         // Find the record that partly or wholly contains the text in the searchBar.  MATCHES instead for exact match. [cd] = ignore case and diacratics
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         //request.predicate = predicate
         //Sort
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         //request.sortDescriptors = [sortDescriptor]
-        loadItems(with: request)
+        loadItems(with: request, predicate: predicate)
         
         //        do {
         //            itemArray = try context.fetch(request)
