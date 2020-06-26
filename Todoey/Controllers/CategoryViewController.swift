@@ -13,10 +13,10 @@ class CategoryViewController: UITableViewController {
     
     let realm = try! Realm() // Although code-smell, it is perfectly valid, but may bomb on first initialising
     
-    var categories = [Catagory]()
+    var categories: Results<Catagory>?
     
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    
+//    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+//
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -29,7 +29,7 @@ class CategoryViewController: UITableViewController {
     
     //Determine how many rows:
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories.count
+        return categories?.count ?? 1 // Nil coalescing operator - If it is nil return 1
     }
     
     // Display the data
@@ -39,7 +39,7 @@ class CategoryViewController: UITableViewController {
         
         //let category = categories[indexPath.row] // To shorten repetitive use of index.Path.row
         
-        cell.textLabel?.text = categories[indexPath.row].name
+        cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories added yet"
         
         return cell
     }
@@ -54,7 +54,7 @@ class CategoryViewController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destinationVC = segue.destination as! TodoListViewController
         if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categories[indexPath.row]
+            destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
     
@@ -73,7 +73,6 @@ class CategoryViewController: UITableViewController {
             
             let newCategory = Catagory()
             newCategory.name = textField.text!
-            self.categories.append(newCategory)
             
             self.save(category: newCategory)
             
@@ -106,14 +105,9 @@ class CategoryViewController: UITableViewController {
     
     // Search
     func loadCategories() {
-    //with request: NSFetchRequest<Catagory> = Catagory.fetchRequest()
-//        // with = external parameter (from searchBarSearchButtonClicked func), request = parameter internal to this function
-//        // = Item.fetchRequest() = default value, when no request is specified and all data to be diplayed.
-//        do {
-//            categories = try context.fetch(request)
-//        } catch {
-//            print("Error loading categories, \(error)")
-//        }
-//        tableView.reloadData()
+        
+        categories = realm.objects(Catagory.self)
+        
+       tableView.reloadData()
    }
 }

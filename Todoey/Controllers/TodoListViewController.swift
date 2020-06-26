@@ -7,36 +7,22 @@
 //
 
 import UIKit
-import CoreData
 import RealmSwift
 
 class TodoListViewController: UITableViewController {// Much simpler than UIView + UITableView as used in Flash Chat project
     
-    var itemArray = [Item]()
+    var todoItems: Results<Item>?
+    let realm = try! Realm()
     var selectedCategory : Catagory? {// Xcode had issues with 'Category' as a table name.
         didSet {
-            //loadItems()
+            loadItems()
         }
     }
-    
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    
-    //var itemArray = ["Blue Whale", "Red Heart", "Green Berets"]
-    
-    //let defaults = UserDefaults.standard // Not DB, but useful e.g. for user preferences, i.e. small data.  NB Singletons!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Store Data in document directory
-        
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        
-        //loadItems() - now in selectedCategory
-        
-        //if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
-        //itemArray = items
-        //}
         
     }
     
@@ -44,53 +30,33 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
     
     //Determine how many rows:
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemArray.count
+        return todoItems?.count ?? 1
     }
     
     // Display the data
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        //print("Cell for row @ indexPath called")
+    
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
-        let item = itemArray[indexPath.row] // To shorten repetitive use of index.Path.row
-        
-        cell.textLabel?.text = item.title
-        
-        // Fix checkmark not cancelling when another row is selected
-        //if item.done == true {
-        //  cell.accessoryType = .checkmark
-        //} else {
-        //  cell.accessoryType = .none
-        //}
-        //Instead use the ternery operator - Handy
-        //value = condition ? valueIfTrue : valueIfFalse
-        cell.accessoryType = item.done ? .checkmark : .none
-        
-        
+        if let item = todoItems?[indexPath.row] {// To shorten repetitive use of index.Path.row
+            cell.textLabel?.text = item.title
+            //Instead use the ternery operator - Handy
+            //value = condition ? valueIfTrue : valueIfFalse
+            cell.accessoryType = item.done ? .checkmark : .none
+        } else {
+            cell.textLabel?.text = "No Items added."
+        }
         return cell
     }
     
     // MARK: - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //print(indexPath.row)
-        //print(itemArray[indexPath.row])
         
-        // Add tick when row selected
-        //if itemArray[indexPath.row].done == false {
-        //  itemArray[indexPath.row].done = true
-        //} else {
-        //  itemArray[indexPath.row].done = false
-        //}
         //Replaced by - if true, make false; if false, make true - Handy!:
-        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        //todoItems[indexPath.row].done = !todoItems[indexPath.row].done
         
-        //if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-        //  tableView.cellForRow(at: indexPath)?.accessoryType = .none
-        //} else {
-        //  tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        //}
-        saveItems()
+        //saveItems()
         
         // Remove grey background to flash briefly
         tableView.deselectRow(at: indexPath, animated: true)
@@ -105,19 +71,19 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
         
         let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            // Event when Add Item button is pressed
-            
-            // Get the object, not the class
-            
-            
-//            let newItem = Item(context: self.context)
-//            newItem.title = textField.text!
-//            newItem.done = false
-//            newItem.parentCategory = self.selectedCategory //Foreign Key
-//            self.itemArray.append(newItem)
-            
-            self.saveItems()
-            
+        
+            if let currentCategory = self.selectedCategory {
+                do {
+                    try self.realm.write {
+                        let newItem = Item()
+                        newItem.title = textField.text!
+                        currentCategory.items.append(newItem)// .done defaults to Class declaration in Item.swift
+                    }
+                } catch {
+                    print("Error saving new Item, \(error)")
+                }
+            }
+            self.tableView.reloadData()
         }
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create new item" // Local variable
@@ -130,41 +96,12 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
     
     //MARK: - Model Manipulation Methods
     
-    func saveItems() {
-        //let encoder = PropertyListEncoder()
+    func loadItems() {
         
-        do {
-            //let data = try encoder.encode(itemArray)
-            //try data.write(to: dataFilePath!)
-            try context.save()
-        } catch {
-            print("Error saving context, \(error)")
-        }
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         
-        self.tableView.reloadData() // To display added data
+        tableView.reloadData()
     }
-    
-//    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
-//        // with = external parameter (from searchBarSearchButtonClicked func), request = parameter internal to this function
-//        // = Item.fetchRequest() = default value, when no request is specified and all data to be diplayed.
-//        //let request : NSFetchRequest<Item> = Item.fetchRequest()
-//
-//        // select only Items of specified Category
-//        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
-//
-//        if let additionalPredicate = predicate {
-//            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
-//        } else {
-//            request.predicate = categoryPredicate
-//        }
-//
-//        do {
-//            itemArray = try context.fetch(request)
-//        } catch {
-//            print("Error fetching data from context, \(error)")
-//        }
-//        tableView.reloadData()
-//    }
     
 }
 
