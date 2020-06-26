@@ -8,13 +8,14 @@
 
 import UIKit
 import CoreData
+import RealmSwift
 
 class TodoListViewController: UITableViewController {// Much simpler than UIView + UITableView as used in Flash Chat project
     
     var itemArray = [Item]()
     var selectedCategory : Catagory? {// Xcode had issues with 'Category' as a table name.
         didSet {
-            loadItems()
+            //loadItems()
         }
     }
     
@@ -109,11 +110,11 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
             // Get the object, not the class
             
             
-            let newItem = Item(context: self.context)
-            newItem.title = textField.text!
-            newItem.done = false
-            newItem.parentCategory = self.selectedCategory //Foreign Key
-            self.itemArray.append(newItem)
+//            let newItem = Item(context: self.context)
+//            newItem.title = textField.text!
+//            newItem.done = false
+//            newItem.parentCategory = self.selectedCategory //Foreign Key
+//            self.itemArray.append(newItem)
             
             self.saveItems()
             
@@ -143,61 +144,61 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
         self.tableView.reloadData() // To display added data
     }
     
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
-        // with = external parameter (from searchBarSearchButtonClicked func), request = parameter internal to this function
-        // = Item.fetchRequest() = default value, when no request is specified and all data to be diplayed.
-        //let request : NSFetchRequest<Item> = Item.fetchRequest()
-        
-        // select only Items of specified Category
-        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
-        
-        if let additionalPredicate = predicate {
-            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
-        } else {
-            request.predicate = categoryPredicate
-        }
-        
-        do {
-            itemArray = try context.fetch(request)
-        } catch {
-            print("Error fetching data from context, \(error)")
-        }
-        tableView.reloadData()
-    }
+//    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+//        // with = external parameter (from searchBarSearchButtonClicked func), request = parameter internal to this function
+//        // = Item.fetchRequest() = default value, when no request is specified and all data to be diplayed.
+//        //let request : NSFetchRequest<Item> = Item.fetchRequest()
+//
+//        // select only Items of specified Category
+//        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+//
+//        if let additionalPredicate = predicate {
+//            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+//        } else {
+//            request.predicate = categoryPredicate
+//        }
+//
+//        do {
+//            itemArray = try context.fetch(request)
+//        } catch {
+//            print("Error fetching data from context, \(error)")
+//        }
+//        tableView.reloadData()
+//    }
     
 }
 
 //MARK: - Search Extension Method
 
 
-extension TodoListViewController: UISearchBarDelegate {
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
-        print(searchBar.text!)
-        // Find the record that partly or wholly contains the text in the searchBar.  MATCHES instead for exact match. [cd] = ignore case and diacratics
-        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-        //request.predicate = predicate
-        //Sort
-        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-        //request.sortDescriptors = [sortDescriptor]
-        loadItems(with: request, predicate: predicate)
-        
-        //        do {
-        //            itemArray = try context.fetch(request)
-        //        } catch {
-        //            print("Error fetching data from context, \(error)")
-        //        }
-        //tableView.reloadData()
-    }
-    
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        // Revert to full display of data if no search data or X is pressed
-        if searchBar.text?.count == 0 {
-            loadItems()// Step 1
-            DispatchQueue.main.async { // Step 2 - Hide K/Board using main thread
-                searchBar.resignFirstResponder()
-            }
-        }
-    }
-}
+//extension TodoListViewController: UISearchBarDelegate {
+//
+//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+//        let request : NSFetchRequest<Item> = Item.fetchRequest()
+//        print(searchBar.text!)
+//        // Find the record that partly or wholly contains the text in the searchBar.  MATCHES instead for exact match. [cd] = ignore case and diacratics
+//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+//        //request.predicate = predicate
+//        //Sort
+//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+//        //request.sortDescriptors = [sortDescriptor]
+//        loadItems(with: request, predicate: predicate)
+//
+//        //        do {
+//        //            itemArray = try context.fetch(request)
+//        //        } catch {
+//        //            print("Error fetching data from context, \(error)")
+//        //        }
+//        //tableView.reloadData()
+//    }
+//
+//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+//        // Revert to full display of data if no search data or X is pressed
+//        if searchBar.text?.count == 0 {
+//            loadItems()// Step 1
+//            DispatchQueue.main.async { // Step 2 - Hide K/Board using main thread
+//                searchBar.resignFirstResponder()
+//            }
+//        }
+//    }
+//}

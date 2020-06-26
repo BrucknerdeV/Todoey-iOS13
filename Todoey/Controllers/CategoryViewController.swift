@@ -7,9 +7,11 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
+    
+    let realm = try! Realm() // Although code-smell, it is perfectly valid, but may bomb on first initialising
     
     var categories = [Catagory]()
     
@@ -69,11 +71,11 @@ class CategoryViewController: UITableViewController {
             
             // Get the object, not the class
             
-            let newCategory = Catagory(context: self.context)
+            let newCategory = Catagory()
             newCategory.name = textField.text!
             self.categories.append(newCategory)
             
-            self.saveCategories()
+            self.save(category: newCategory)
             
         }
         alert.addAction(action)
@@ -89,10 +91,12 @@ class CategoryViewController: UITableViewController {
     
     //MARK: - Data manipulation Methods
     
-    func saveCategories() {
+    func save(category: Catagory) {
         
         do {
-            try context.save()
+            try realm.write {
+                realm.add(category)
+            }
         } catch {
             print("Error saving category, \(error)")
         }
@@ -101,14 +105,15 @@ class CategoryViewController: UITableViewController {
     }
     
     // Search
-    func loadCategories(with request: NSFetchRequest<Catagory> = Catagory.fetchRequest()) {
-        // with = external parameter (from searchBarSearchButtonClicked func), request = parameter internal to this function
-        // = Item.fetchRequest() = default value, when no request is specified and all data to be diplayed.
-        do {
-            categories = try context.fetch(request)
-        } catch {
-            print("Error loading categories, \(error)")
-        }
-        tableView.reloadData()
-    }
+    func loadCategories() {
+    //with request: NSFetchRequest<Catagory> = Catagory.fetchRequest()
+//        // with = external parameter (from searchBarSearchButtonClicked func), request = parameter internal to this function
+//        // = Item.fetchRequest() = default value, when no request is specified and all data to be diplayed.
+//        do {
+//            categories = try context.fetch(request)
+//        } catch {
+//            print("Error loading categories, \(error)")
+//        }
+//        tableView.reloadData()
+   }
 }
