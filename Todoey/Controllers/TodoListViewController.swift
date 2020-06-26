@@ -53,10 +53,18 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        //Replaced by - if true, make false; if false, make true - Handy!:
-        //todoItems[indexPath.row].done = !todoItems[indexPath.row].done
+        if let item = todoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    item.done = !item.done
+                    //realm.delete(item) Replace previous line with this one.
+                }
+            } catch {
+                print("Error saving done status, \(error)")
+            }
+        }
         
-        //saveItems()
+        tableView.reloadData()
         
         // Remove grey background to flash briefly
         tableView.deselectRow(at: indexPath, animated: true)
@@ -77,6 +85,7 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
                     try self.realm.write {
                         let newItem = Item()
                         newItem.title = textField.text!
+                        newItem.dateCreated = Date()
                         currentCategory.items.append(newItem)// .done defaults to Class declaration in Item.swift
                     }
                 } catch {
@@ -108,34 +117,21 @@ class TodoListViewController: UITableViewController {// Much simpler than UIView
 //MARK: - Search Extension Method
 
 
-//extension TodoListViewController: UISearchBarDelegate {
-//
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        let request : NSFetchRequest<Item> = Item.fetchRequest()
-//        print(searchBar.text!)
-//        // Find the record that partly or wholly contains the text in the searchBar.  MATCHES instead for exact match. [cd] = ignore case and diacratics
-//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//        //request.predicate = predicate
-//        //Sort
-//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-//        //request.sortDescriptors = [sortDescriptor]
-//        loadItems(with: request, predicate: predicate)
-//
-//        //        do {
-//        //            itemArray = try context.fetch(request)
-//        //        } catch {
-//        //            print("Error fetching data from context, \(error)")
-//        //        }
-//        //tableView.reloadData()
-//    }
-//
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        // Revert to full display of data if no search data or X is pressed
-//        if searchBar.text?.count == 0 {
-//            loadItems()// Step 1
-//            DispatchQueue.main.async { // Step 2 - Hide K/Board using main thread
-//                searchBar.resignFirstResponder()
-//            }
-//        }
-//    }
-//}
+extension TodoListViewController: UISearchBarDelegate {
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+        tableView.reloadData()
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        // Revert to full display of data if no search data or X is pressed
+        if searchBar.text?.count == 0 {
+            loadItems()// Step 1
+            DispatchQueue.main.async { // Step 2 - Hide K/Board using main thread
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
+}
