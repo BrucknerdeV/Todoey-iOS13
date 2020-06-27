@@ -22,7 +22,6 @@ class CategoryViewController: SwipeTableViewController {
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
         loadCategories()
-        tableView.rowHeight = 80    
     }
     
     // MARK: - Table view data source
